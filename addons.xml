@@ -25,16 +25,12 @@ addon Qobuz pour XBMC. Il permet d'accéder à l'ensemble du service streaming d
 	-->
 </addon>
 
-<addon id="script.module.requests"
-       name="Requests"
-       version="3.2.0"
-       provider-name="keith">
+<addon id="script.module.requests" name="Requests" version="0.14.2"
+						provider-name="keith">
   <requires>
-    <import addon="xbmc.python"
-    		version="2.0"/>
+    <import addon="xbmc.python" version="2.0"/>
   </requires>
-  <extension point="xbmc.python.module"
-             library="lib" />
+  <extension point="xbmc.python.module" library="lib" />
   <extension point="xbmc.addon.metadata">
     <summary>HTTP lib</summary>
     <description>Beautiful http lib</description>
