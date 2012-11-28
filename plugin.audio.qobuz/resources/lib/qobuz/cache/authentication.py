@@ -35,7 +35,7 @@ class Cache_authentication(ICacheable):
         super(Cache_authentication, self).__init__(qobuz.path.cache,
                                          'authentication', None, False)
         self.set_cache_refresh(qobuz.addon.getSetting('cache_duration_auth'))
-        info(self, "Cache duration: " + str(self.cache_refresh))
+        debug(self, "Cache duration: " + str(self.cache_refresh))
         self.fetch_data()
 
     def hook_pre_refresh(self):
@@ -45,7 +45,7 @@ class Cache_authentication(ICacheable):
     def _fetch_data(self):
         params = {
                   'password': hashlib.md5(self.password).hexdigest(),
-                  'username': self.login, 
+                  'username': self.login,
                   'email': self.login,
                    }
         data = qobuz.api._api_request(params, "/api.json/0.2/user/login")

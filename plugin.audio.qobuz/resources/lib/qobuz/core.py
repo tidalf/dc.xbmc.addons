@@ -43,20 +43,19 @@ class QobuzCore:
             return None
         auth = qobuz.api.login(username, password)
         if not auth: return None
-        if auth.get_data()['user']['login'] != username:
-            warn(self, "User login mismatch")
-            self.delete_user_data()
-            auth.delete_cache()
-            return None
-        return auth
+        try: 
+            if auth.get_data()['code'] == "401":
+                warn(self, "Bad Auth")
+                self.delete_user_data()
+                auth.delete_cache()
+                return None
+        except: return auth
 
     def delete_user_data(self):
-        #try:
             from utils.cache_manager import cache_manager
             c = cache_manager()
             if not c.delete_user_data():
                 warn(self, "Fail to erase all specific user data")
                 qobuz.gui.notifyH(self, "Cache can be inconsistant")
-#        except:
-#            warn(self, "Cannot remove user data from cache")
+
             
