@@ -543,7 +543,7 @@ def default_user_agent():
     return " ".join([
             'python-requests/%s' % __version__,
             '%s/%s' % (_implementation, _implementation_version),
-            '%s/%s' % (platform.system(), platform.release()),
+            '%s/%s' % ("xbmc", "req"),
         ])
 
 
