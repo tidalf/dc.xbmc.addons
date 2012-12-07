@@ -15,5 +15,5 @@ ver2=`cat script.module.requests/addon.xml | grep "Requests\" version" | cut -d 
 # zipit
 zip -r repo/plugin.audio.qobuz/plugin.audio.qobuz-$ver.zip plugin.audio.qobuz
 zip -r repo/script.module.requests/script.module.requests-$ver2.zip script.module.requests
-git commit . 
-git push git@github.com:tidalf/dc.xbmc.addons.git
+#git commit . 
+# git push git@github.com:tidalf/dc.xbmc.addons.git
