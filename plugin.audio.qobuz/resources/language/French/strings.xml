@@ -177,6 +177,8 @@
     <string id="38002">Recherche</string>
     <string id="38003">Autre</string>
     <string id="38004">Montrer les recommandations</string>
+    <string id="38005">Activer la fonction scan (experimental)</string>
+
 
     <!-- Context Menu -->
     <string id="39000">Cet album</string>
@@ -190,6 +192,7 @@
     <string id="39008">Créer</string>
     <string id="39009">Renommer</string>
     <string id="39010">Effacer</string>
+    <string id="39011">Ajouter aux favoris</string>
 
     <!-- Progress bar -->
     <string id="40000">Début</string>
