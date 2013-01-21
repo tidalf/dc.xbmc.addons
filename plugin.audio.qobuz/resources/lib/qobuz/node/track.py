@@ -19,7 +19,7 @@ from constants import Mode
 from flag import NodeFlag as Flag
 from inode import INode
 from debug import warn
-from gui.util import lang, getImage, runPlugin
+from gui.util import lang, getImage, runPlugin, getSetting
 from gui.contextmenu import contextMenu
 from api import api
 
@@ -39,7 +39,7 @@ class Node_track(INode):
         self.status = None
         self.image = getImage('song')
 
-    def pre_build_down(self, Dir, lvl, whiteFlag, blackFlag):
+    def fetch(self, Dir, lvl, whiteFlag, blackFlag):
         if blackFlag & Flag.STOPBUILD == Flag.STOPBUILD:
             return False
         data = qobuz.registry.get(name='track', id=self.id)
@@ -48,7 +48,7 @@ class Node_track(INode):
         self.data = data['data']
         return True
     
-    def _build_down(self, Dir, lvl, whiteFlag, blackFlag):
+    def populate(self, Dir, lvl, whiteFlag, blackFlag):
         Dir.add_node(self)
         return True
 
@@ -235,6 +235,15 @@ class Node_track(INode):
         item.setPath(self.get_streaming_url())
         return True
     
+    def get_album_id(self):
+        albumid = self.get_property('album/id')
+        if not albumid and self.parent:
+            return self.parent.id
+        if albumid:
+                return albumid
+        else: 
+            return ''
+    
     def makeListItem(self, replaceItems=False):
         import xbmcgui
         media_number = self.get_media_number()
@@ -282,16 +291,29 @@ class Node_track(INode):
             comment = mlabel
         if description:
             comment += ' - ' + description
+        '''Xbmc Library fix: Compilation showing one entry by track
+            We are setting artist like 'VA / Artist'
+            Data snippet:
+                {u'id': 26887, u'name': u'Interpr\xe8tes Divers'}
+                {u'id': 145383, u'name': u'Various Artists'}
+                {u'id': 255948, u'name': u'Multi Interpretes'}
+        '''
+        artist = self.get_artist()
+        if self.parent and hasattr(self.parent, 'get_artist_id'):
+            artist_id = str(self.parent.get_artist_id())
+            if artist_id in ['26887', '145383', '255948']:
+                artist = '%s / %s' % (self.parent.get_artist(), artist)
+                
         item.setInfo(type='music', infoLabels={
                      'count': self.id,
                      'title': self.get_title(),
                      'album': self.get_album(),
                      'genre': self.get_genre(),
-                     'artist': self.get_artist(),
+                     'artist': artist,
                      'tracknumber': track_number,
                      'duration': duration,
                      'year': self.get_year(),
-                     'comment': 'Qobuz Music Streaming',
+                     'comment': description + ' (aid=' + self.get_album_id() + ')',
                      'lyrics': "Chant down babylon lalalala" 
                      })
         item.setProperty('DiscNumber', str(media_number))
@@ -306,6 +328,7 @@ class Node_track(INode):
 
     def attach_context_menu(self, item, menu):
         if self.parent and (self.parent.type & Flag.PLAYLIST == Flag.PLAYLIST):
+            colorCaution = getSetting('item_caution_color')
             url = self.parent.make_url(type=Flag.PLAYLIST,
                 id=self.parent.id,
                 qid=self.get_playlist_track_id(),
@@ -314,7 +337,7 @@ class Node_track(INode):
             # print "URL %s" % (url)
             menu.add(path='playlist/remove', 
                      label=lang(30073),
-                     cmd=runPlugin(url))
+                     cmd=runPlugin(url), color=colorCaution)
 
         ''' Calling base class '''
         super(Node_track, self).attach_context_menu(item, menu)

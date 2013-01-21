@@ -127,46 +127,6 @@ class MyPlayer(xbmc.Player):
         self.trackId = None
         return False
 
-#    def onQueueNextItem(self):
-#        return True
-#        nid  = self.getProperty(keyTrackId) 
-#        warn (self, "next item queued from monitor !!!!!!" + nid )
-#        pos = self.playlist().getposition()
-#        if pos == -1:
-#            print "-1"
-#            pos = len(self.playlist()) - 1
-#        res = rpc.getInfoLabels(labels=['Container(50).Position','MusicPlayer.PlaylistPosition', 'MusicPlayer.PlaylistLength', 'ListItem.FileName']).result()
-#        pos = res['Container(50).Position']
-#        if not pos:
-#            pos = len(self.playlist())
-#        pos = int(pos) - 1
-#        print "Position: %s" % (repr(pos))
-#        itempath = self.playlist()[pos].getfilename()
-#
-#        print "Item: %s" % (itempath)
-#        label = xbmc.getInfoLabel('ListItem.Path')
-#        print "Label: %s" % (label)
-#        import re
-#        m = re.search('^musicdb://.*/(\d+)(\?.*)$', itempath)
-#        if m:
-#            res = rpc.getSongDetails(m.group(1)).result()
-#            print "GetInfo %s" % (res)
-#            m2 = re.search('"qobuz_track_id": "(\d+)"', 
-#                           res['songdetails']['comment'])
-#            node = getNode(Flag.TRACK, {'nid': m2.group(1)})
-#            node.pre_build_down(None, None,None, Flag.NONE)
-#            self.play(node.get_streaming_url(), 
-#                                          node.makeListItem(), True)
-#            self.playlist().add(node.get_streaming_url(), node.makeListItem(), pos + 1)
-#            self.playlist().remove(itempath)
-#            setResolvedUrl(handle=qobuz.boot.handle,
-#            succeeded=True,
-#            listitem=node.makeListItem())
-#            return True
-#        print m.group(1)
-#        print "GetInfo %s" % (rpc.getSongDetails().result())
-#        return super(MyPlayer, self).onQueueNextItem()
-
 class Monitor(xbmc.Monitor):
 
     def __init__(self, qobuz):
@@ -190,6 +150,49 @@ class Monitor(xbmc.Monitor):
             return False
         except:
             return False
+        
+    def onDatabaseUpdated( self, database ):
+        import sqlite3 as lite
+        if database != 'music':
+            return 0
+        dbfile = os.path.join(xbmc.translatePath('special://profile/')
+                              ,"Database\MyMusic32.db")
+        try:
+            con = lite.connect(dbfile)
+            cur = con.cursor()    
+            cur.execute('SELECT DISTINCT(IdAlbum), comment from song')
+            data = cur.fetchall()
+            for line in data:
+                musicdb_idAlbum = line[0]
+                import re
+                try:
+                    qobuz_idAlbum = re.search(u'aid=(\d+)', line[1]).group(1)
+                except: continue
+                sqlcmd = "SELECT rowid from art WHERE media_id=?" 
+                print sqlcmd + str(musicdb_idAlbum)
+                data = None
+                try:
+                    cur.execute(sqlcmd,str(musicdb_idAlbum))
+                    data = cur.fetchone()
+                except: pass
+                if  data is None : 
+                    print "no data try to insert"
+                    sqlcmd2 = "INSERT INTO art VALUES ( NULL, (?) , 'album', 'thumb', (?) )"
+                    subdir = qobuz_idAlbum[:4]
+                    url = "http://static.qobuz.com/images/jaquettes/" + subdir + "/" + qobuz_idAlbum + "_600.jpg"
+                    try:
+                       cur.execute (sqlcmd2,(str(musicdb_idAlbum), url))
+                    except: pass
+                else:
+                    print "already someting"
+            con.commit()
+        except lite.Error, e:
+            print "Error %s:" % e.args[0]
+            return -1;
+        finally:
+            if con:
+                con.commit()
+                con.close()   
 
     def cache_remove_old(self, **ka):
         timeStarted = time()
